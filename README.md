@@ -72,7 +72,7 @@ python main.py
 ### Interface Walkthrough
 
 1. **Enter URL** – Paste a your URL
-2. **Select Codec** – Choose audio format (M4A, MP3, AAC, FLAC, Opus)
+2. **Select Codec** – Choose audio format (M4A, MP3, FLAC, Opus)
 3. **Select Bitrate** – Choose quality (64–320 kbps)
 4. **Click Download** – Start the download with progress bar
 5. **Cancel if needed** – Stop an ongoing download
