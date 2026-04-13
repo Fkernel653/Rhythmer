@@ -18,7 +18,7 @@ LINES_KBPS = """64
 256
 320""".splitlines()
 
-class Rhythmer(App):
+class Rhytmer(App):
     CSS = """
     #main_container {
         layout: vertical;
@@ -225,5 +225,5 @@ class Rhythmer(App):
 
 
 if __name__ == "__main__":
-    app = Rhythmer()
+    app = Rhytmer()
     app.run()
