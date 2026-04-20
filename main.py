@@ -44,7 +44,7 @@ class Rhythmer(App):
         self.executor = ThreadPoolExecutor(max_workers=1)
 
         # Default conversion settings
-        self.selected_codec = "m4a"
+        self.selected_codec = "opus"
         self.selected_kbps = 256
 
     def compose(self) -> ComposeResult:
