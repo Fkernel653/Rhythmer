@@ -6,7 +6,7 @@
 [![TUI](https://img.shields.io/badge/TUI-textual-purple.svg)](https://github.com/Textualize/textual)
 [![Ruff](https://img.shields.io/badge/code%20style-ruff-261230?logo=ruff&logoColor=white)](https://docs.astral.sh/ruff/)
 
-A modern terminal-based audio downloader with interactive UI, built with Python and Textual. Download high-quality audio from YouTube and SoundCloud with automatic metadata embedding and thumbnail support.
+A modern terminal-based audio downloader with interactive UI, built with Python and Textual. Download high-quality audio from YouTube, SoundCloud, and [1000+ other platforms](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md) with automatic metadata embedding and thumbnail support. Powered by yt-dlp.
 
 ![Screenshot](screenshot.png)
 
