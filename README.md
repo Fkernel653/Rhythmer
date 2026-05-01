@@ -77,6 +77,7 @@ Rhythmer/
 ├── config.json         # User settings
 ├── pyproject.toml      # Project metadata and dependencies
 ├── README.md           # Project documentation
+├── screenshot.png      # Application screenshot
 └── modules/
     ├── download.py     # Audio download logic
     ├── add_metadata.py # Tagging handler
