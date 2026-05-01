@@ -71,13 +71,16 @@ python main.py
 
 ```
 Rhythmer/
-├── main.py           # TUI entry point
-├── add_path.py       # Path config
-├── style.tcss        # Tokyo Night theme
-├── config.json       # User settings
+├── main.py             # TUI entry point
+├── add_path.py         # Path config
+├── style.tcss          # Layout and spacing (not theming — theme is defined in code)
+├── config.json         # User settings
+├── pyproject.toml      # Project metadata and dependencies
+├── README.md           # Project documentation
 └── modules/
-    ├── download.py   # yt-dlp wrapper
-    └── add_metadata.py
+    ├── download.py     # Audio download logic
+    ├── add_metadata.py # Tagging handler
+    └── colors.py       # Terminal colors
 ```
 
 ## 🔧 Requirements
@@ -93,10 +96,6 @@ Rhythmer/
 
 MIT License — see [LICENSE](LICENSE).
 
-## 👤 Author
-
-**Fkernel653** — [GitHub](https://github.com/Fkernel653)
-
 ## 🙏 Acknowledgments
 
 - [Textual](https://github.com/Textualize/textual) – TUI framework
@@ -106,3 +105,8 @@ MIT License — see [LICENSE](LICENSE).
 ## ⚠️ Disclaimer
 
 **For educational purposes only.** Users are responsible for complying with platform Terms of Service and applicable copyright laws. Download only content you have permission to download.
+
+---
+
+**Author:** [Fkernel653](https://github.com/Fkernel653)  
+**Repository:** [github.com/Fkernel653/Rhythmer](https://github.com/Fkernel653/Rhythmer)
