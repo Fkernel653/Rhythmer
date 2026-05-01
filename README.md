@@ -21,7 +21,7 @@ A modern terminal-based audio downloader with interactive UI, built with Python 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.10+ & FFmpeg
+- Python 3.14+ & FFmpeg
 
 ### Installation
 
