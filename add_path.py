@@ -1,12 +1,12 @@
-from modules.colors import RESET, BOLD, RED, GREEN, YELLOW, BLUE
+from json import JSONDecodeError, dump, load
 from pathlib import Path
-import json
+
+from modules.colors import BLUE, BOLD, GREEN, RED, RESET, YELLOW
 
 
 def add_path():
     """Configure or display the download directory path"""
-    parent_folder = Path(__file__).parent
-    config_file = parent_folder / "config.json"
+    config_file = Path(__file__).parent / "config.json"
 
     try:
         user_input = input(f"{BOLD}\tEnter your path: {RESET}").strip()
@@ -18,18 +18,20 @@ def add_path():
             # Save path to config file
             config = {"path": str(input_path)}
             with open(config_file, "w", encoding="utf-8") as f:
-                json.dump(config, f, ensure_ascii=False, indent=4)
+                dump(config, f, ensure_ascii=False, indent=4)
 
-            print(f"{GREEN}Configuration saved successfully!{RESET}")
-            print(f"{YELLOW}\tPath: {RESET}{input_path}")
-            print(f"{BLUE}\tConfig file: {RESET}{config_file}")
+            return (
+                f"{GREEN}Configuration saved successfully!{RESET}"
+                f"{YELLOW}    Path: {RESET}{input_path}"
+                f"{BLUE}    Config file: {RESET}{config_file}"
+            )
 
         # Getter mode - no input provided, show current config
         else:
             if config_file.exists():
                 with open(config_file, "r", encoding="utf-8") as f:
                     try:
-                        data = json.load(f)
+                        data = load(f)
                         saved_path_str = data.get("path")
 
                         if saved_path_str:
@@ -37,43 +39,29 @@ def add_path():
 
                             # Verify the saved path still exists
                             if saved_path.exists():
-                                print(
+                                return (
                                     f"{GREEN}Current download directory: {RESET}{saved_path}"
-                                )
-                                print(
                                     f"{GREEN}Configuration file: {RESET}{config_file}"
                                 )
                             else:
-                                print(
+                                return (
                                     f"{RED}\nConfig file exists but the saved path is invalid!{RESET}"
+                                    f"{RED}Path: {RESET}{saved_path}"
                                 )
-                                print(f"{RED}Path: {RESET}{saved_path}")
-                                exit(1)
                         else:
-                            print(
-                                f"{RED}\nConfig file exists but 'path' key is missing!{RESET}"
-                            )
-                            exit(1)
+                            return f"{RED}\nConfig file exists but 'path' key is missing!{RESET}"
 
-                    except json.JSONDecodeError:
-                        print(
-                            f"{RED}\nConfig file is corrupted! Please reconfigure.{RESET}"
-                        )
-                        exit(1)
+                    except JSONDecodeError:
+                        return f"{RED}\nConfig file is corrupted! Please reconfigure.{RESET}"
             else:
-                print(
-                    f"{RED}\nConfig file not found! Please set a download path first.{RESET}"
-                )
-                exit(1)
+                return f"{RED}\nConfig file not found! Please set a download path first.{RESET}"
 
     except KeyboardInterrupt:
         # Handle Ctrl+C gracefully
-        print(f"\r\033[K{GREEN}Goodbye!{RESET}")
-        exit(0)
+        return f"\r\033[K\n{GREEN}Goodbye!{RESET}"
 
     except Exception as e:
-        print(f"{RED}Error: {e}{RESET}")
-        exit(1)
+        return f"{RED}Error: {e}{RESET}"
 
 
 if __name__ == "__main__":

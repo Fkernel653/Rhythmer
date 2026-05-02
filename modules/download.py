@@ -1,10 +1,14 @@
-from yt_dlp import YoutubeDL
-from modules.add_metadata import add_metadata
-from dataclasses import dataclass, field
-from typing import Optional, Callable
-from pathlib import Path
+"""
+Simple YouTube audio downloader with progress tracking for Textual.
+"""
+
 import json
 import threading
+from pathlib import Path
+from shutil import which
+from typing import Any, Callable, Dict, Optional
+
+from yt_dlp import YoutubeDL
 
 
 class DownloadError(Exception):
@@ -15,100 +19,97 @@ class DownloadCancelledError(DownloadError):
     pass
 
 
-@dataclass
 class Download:
-    url: str
-    codec: Optional[str]
-    kbps: Optional[int]
-    progress_callback: Optional[Callable] = field(default=None, repr=False)
-    cancel_check_callback: Optional[Callable] = field(default=None, repr=False)
+    """Simple YouTube audio downloader with progress tracking."""
 
-    _config_path: Path = field(
-        default_factory=lambda: Path(__file__).parent.parent / "config.json",
-        init=False,
-        repr=False,
-    )
-    _ydl: Optional[YoutubeDL] = field(default=None, init=False, repr=False)
-    _cancelled: bool = field(default=False, init=False, repr=False)
-    _lock: threading.Lock = field(
-        default_factory=threading.Lock, init=False, repr=False
-    )
+    def __init__(self, url: str, codec: str = "opus", kbps: int = 256):
+        self.url = url
+        self.codec = codec
+        self.kbps = kbps
+        self._progress_callback: Optional[Callable[[int], None]] = None
+        self._cancel_callback: Optional[Callable[[], bool]] = None
+        self._cancelled = False
+        self._lock = threading.Lock()
+        self._last_progress = 0
 
-    def _get_download_path(self) -> Path:
-        if not self._config_path.exists():
-            raise DownloadError(
-                f"Config file not found at {self._config_path}\n"
-                "Please run 'config' command first to set download path."
-            )
+        # Validate requirements
+        if which("ffmpeg") is None:
+            raise DownloadError("FFmpeg not found in PATH!")
 
-        with open(self._config_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        config_file = Path(__file__).parent.parent / "config.json"
+        if not config_file.exists():
+            raise DownloadError("Config not found!")
 
-        if not data.get("path"):
-            raise DownloadError("Config file missing 'path' key")
+        try:
+            data = json.loads(config_file.read_text("utf-8"))
+            self._download_path = data["path"]
+        except (json.JSONDecodeError, KeyError) as e:
+            raise DownloadError(f"Invalid config: {e}")
 
-        path = Path(data["path"])
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+    def set_progress_callback(self, callback: Callable[[int], None]) -> None:
+        """Set callback for progress updates (0-100)."""
+        self._progress_callback = callback
 
-    def set_progress_callback(self, callback: Callable) -> None:
-        self.progress_callback = callback
-
-    def set_cancel_check(self, callback: Callable) -> None:
-        self.cancel_check_callback = callback
+    def set_cancel_check(self, callback: Callable[[], bool]) -> None:
+        """Set callback to check if download should be cancelled."""
+        self._cancel_callback = callback
 
     def cancel(self) -> None:
+        """Cancel the current download."""
         with self._lock:
             self._cancelled = True
 
-    def _check_cancelled(self) -> None:
-        if self._cancelled or (
-            self.cancel_check_callback and self.cancel_check_callback()
-        ):
-            self._cancelled = True
-            raise DownloadCancelledError("Download cancelled by user")
+    def _progress_hook(self, d: Dict[str, Any]) -> None:
+        """Progress hook for yt-dlp."""
+        if self._cancelled or (self._cancel_callback and self._cancel_callback()):
+            raise DownloadCancelledError("Download cancelled")
 
-    def progress_hook(self, d: dict) -> None:
-        try:
-            self._check_cancelled()
-        except DownloadCancelledError:
-            raise Exception("Download cancelled")
+        if not self._progress_callback:
+            return
 
-        if self.progress_callback:
-            percent = 0
-            if d["status"] == "downloading":
-                percent_str = d.get("_percent_str", "0%").rstrip("%")
+        status = d.get("status", "")
+
+        if status == "downloading":
+            percent_str = d.get("_percent_str", "0%")
+            if percent_str and percent_str != "N/A":
                 try:
-                    percent = float(percent_str)
-                except ValueError:
-                    pass
+                    percent = float(percent_str.rstrip("%"))
+                except ValueError, AttributeError:
+                    percent = 0
+            else:
+                total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+                downloaded = d.get("downloaded_bytes") or 0
+                percent = (downloaded / total * 100) if total > 0 else 0
 
-                if percent == 0 and d.get("total_bytes") and d["total_bytes"] > 0:
-                    percent = (d.get("downloaded_bytes", 0) / d["total_bytes"]) * 100
-                elif (
-                    percent == 0
-                    and d.get("total_bytes_estimate")
-                    and d["total_bytes_estimate"] > 0
-                ):
-                    percent = (
-                        d.get("downloaded_bytes", 0) / d["total_bytes_estimate"]
-                    ) * 100
+            progress = int(min(percent, 99))
+            if progress > self._last_progress:
+                self._last_progress = progress
+                self._progress_callback(progress)
 
-                if percent > 0:
-                    self.progress_callback(int(min(percent, 99)))
-            elif d["status"] == "processing":
-                self.progress_callback(99)
-            elif d["status"] == "finished":
-                self.progress_callback(100)
+        elif status == "processing":
+            if self._last_progress < 99:
+                self._last_progress = 99
+                self._progress_callback(99)
+
+        elif status == "finished":
+            if self._last_progress < 100:
+                self._last_progress = 100
+                self._progress_callback(100)
 
     def download(self) -> bool:
-        self._check_cancelled()
-        download_path = self._get_download_path()
+        """Download audio from URL. Returns True if successful."""
+        self._cancelled = False
+        self._last_progress = 0
 
         opts = {
             "format": "bestaudio/best",
-            "outtmpl": str(download_path / "%(title)s.%(ext)s"),
+            "outtmpl": str(Path(self._download_path) / "%(title)s.%(ext)s"),
+            "quiet": True,
+            "no_warnings": True,
+            "nooverwrites": True,
             "writethumbnail": True,
+            "progress_hooks": [self._progress_hook],
+            "noprogress": False,
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
@@ -117,72 +118,19 @@ class Download:
                 },
                 {"key": "EmbedThumbnail"},
             ],
-            "progress_hooks": [self.progress_hook],
-            "quiet": True,
-            "no_warnings": True,
-            "nooverwrites": True,
         }
 
         try:
             with YoutubeDL(opts) as ydl:
-                self._ydl = ydl
-                self._check_cancelled()
+                ydl.download([self.url])
 
-                info = ydl.extract_info(self.url, download=False)
-                filename = ydl.prepare_filename(info)
-                file_path = (
-                    None
-                    if "%" in filename
-                    else Path(filename).with_suffix(f".{self.codec}")
-                )
-
-                ydl.process_info(info)
-
-                if file_path is None:
-                    file_path = Path(
-                        info.get("requested_downloads", [{}])[0].get("filepath", "")
-                    )
-                    if not file_path or not file_path.exists():
-                        raise DownloadError("Could not determine downloaded file path")
-
-                title = info.get("title", "")
-                artist = info.get("uploader") or info.get("channel") or ""
-                album = info.get("album") or info.get("channel") or ""
-
-                self._check_cancelled()
-
-            result = add_metadata(
-                file=file_path,
-                codec=self.codec,
-                title=title,
-                artist=artist,
-                album=album,
-            )
-
-            if self.progress_callback:
-                self.progress_callback(100)
-
-            return result
+            if self._progress_callback:
+                self._progress_callback(100)
+            return True
 
         except DownloadCancelledError:
             raise
         except Exception as e:
             if self._cancelled:
-                raise DownloadCancelledError("Download cancelled by user")
-
-            error_msg = str(e)
-            errors = {
-                "HTTP Error 403": "Access forbidden (403). The site may be blocking the request.",
-                "HTTP Error 404": "Video not found (404). Please check the URL.",
-                "Unsupported URL": f"Unsupported URL: {self.url}",
-                "This video is not available": "This video is not available or is private.",
-                "Sign in to confirm your age": "This video requires age verification.",
-            }
-
-            for key, msg in errors.items():
-                if key in error_msg:
-                    raise DownloadError(msg)
-
+                raise DownloadCancelledError("Download cancelled")
             raise DownloadError(f"Download failed: {e}")
-        finally:
-            self._ydl = None
