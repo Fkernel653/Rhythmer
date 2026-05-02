@@ -25,27 +25,31 @@ A modern terminal-based audio downloader with interactive UI, built with Python 
 
 ### Installation
 
+#### 1. Clone Repository
+
+```bash
+git clone -b py https://github.com/Fkernel653/Rhythmer.git && cd Rhythmer
+```
+
+#### 2. Install Dependencies
+
 **uv** (recommended)
 ```bash
-git clone https://github.com/Fkernel653/Rhythmer.git && cd Rhythmer
 uv sync
 ```
 
 **pip**
 ```bash
-git clone https://github.com/Fkernel653/Rhythmer.git && cd Rhythmer
 pip install .
 ```
 
 **Poetry**
 ```bash
-git clone https://github.com/Fkernel653/Rhythmer.git && cd Rhythmer
 poetry install
 ```
 
 **PDM**
 ```bash
-git clone https://github.com/Fkernel653/Rhythmer.git && cd Rhythmer
 pdm install
 ```
 
