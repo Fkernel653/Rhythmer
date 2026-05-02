@@ -80,7 +80,6 @@ Rhythmer/
 ├── screenshot.png      # Application screenshot
 └── modules/
     ├── download.py     # Audio download logic
-    ├── add_metadata.py # Tagging handler
     └── colors.py       # Terminal colors
 ```
 
@@ -90,7 +89,6 @@ Rhythmer/
 |---------|---------|
 | `textual` | TUI framework |
 | `yt-dlp` | Audio extraction |
-| `mutagen` | Metadata tagging |
 | FFmpeg | Audio conversion |
 
 ## 📄 License
@@ -101,7 +99,6 @@ MIT License — see [LICENSE](LICENSE).
 
 - [Textual](https://github.com/Textualize/textual) – TUI framework
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) – YouTube download library
-- [mutagen](https://github.com/quodlibet/mutagen) – Audio metadata handling
 
 ## ⚠️ Disclaimer
 

@@ -1,9 +1,3 @@
-# colors.py
-"""
-ANSI color codes for terminal output formatting.
-Usage: from modules.colors import RESET, RED, GREEN
-"""
-
 RESET = "\033[01;0m"
 
 BOLD = "\033[01;1m"
