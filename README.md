@@ -93,6 +93,7 @@ Rhythmer/
 |---------|---------|
 | `textual` | TUI framework |
 | `yt-dlp` | Audio extraction |
+| `mutagen` | Audio metadata tagging |
 | FFmpeg | Audio conversion |
 
 ## 📄 License
@@ -103,6 +104,7 @@ MIT License — see [LICENSE](LICENSE).
 
 - [Textual](https://github.com/Textualize/textual) – TUI framework
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) – YouTube download library
+- [mutagen](https://github.com/quodlibet/mutagen) — Audio metadata tagging
 
 ## ⚠️ Disclaimer
 
